@@ -38,27 +38,49 @@ def test(model, dataset_loader, criterion, device):
             total += targets.size(0)
             _, predictions = torch.max(outputs, 1)
             correct += torch.sum(predictions == targets.data)
-    return loss / total, correct.double() / total
+    return loss / total, correct.double().item() / total
 
 
-def bit_error_tolerance(model, prob, dataset_loader, device):
+class ClipModel(nn.Module):
+    def __init__(self, inner_model, min, max):
+        super(ClipModel, self).__init__()
+        self.model = inner_model
+        self.min = min
+        self.max = max
+
+    def forward(self, x):
+        for param in self.model.parameters():
+            param.data = torch.nan_to_num(param.data, nan=0.0, posinf=0.0, neginf=0.0)
+            param.data = torch.clamp(param.data, max=self.max, min=self.min)
+        return self.model(x)
+
+
+def bit_error_tolerance(model, probs, dataset_loader, device):
     criterion = nn.CrossEntropyLoss()
     loss, acc = test(model, dataset_loader, criterion, device)
     print("original model ==> loss:{%.3f}, acc:{%.3f}" % (loss, acc))
-    model = damage_model(model, prob)
-    loss, acc = test(model, dataset_loader, criterion, device)
-    print("damaged model ==> loss:{%.3f}, acc:{%.3f}" % (loss, acc))
+    print("damaged model ==> ")
+    for prob in probs:
+        print("damage probability: ", prob)
+        damaged_model = damage_model(model, prob)
+        damaged_loss, damaged_acc = test(damaged_model, dataset_loader, criterion, device)
+        print("damaged loss:{%.3f}, damaged acc:{%.3f}, loss rate:{%.3f}, acc rate:{%.3f}"
+              % (damaged_loss, damaged_acc, damaged_loss / loss, damaged_acc / acc))
+        clipped_model = ClipModel(damaged_model, -1.0, 1.0)
+        clipped_loss, clipped_acc = test(clipped_model, dataset_loader, criterion, device)
+        print("clipped loss:{%.3f}, clipped acc:{%.3f}, loss rate:{%.3f}, acc rate:{%.3f}"
+              % (clipped_loss, clipped_acc, clipped_loss / loss, clipped_acc / acc))
 
 
 if __name__ == '__main__':
     # 这个文件的代码用于模拟RRAM上的比特错误情形，下面是使用示例
-    print('==> Building model..')
+    # prepare model
     # 随便找的一个在cifar上预训练好的模型 https://github.com/chenyaofo/pytorch-cifar-models
     model = torch.hub.load("chenyaofo/pytorch-cifar-models", "cifar10_resnet20", pretrained=True)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     model.to(device)
-
-    print('==> Preparing data..')
+    model.eval()
+    # prepare dataset
     transform_test = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -67,4 +89,5 @@ if __name__ == '__main__':
     test_set = torchvision.datasets.CIFAR10(root='./data', train=False, download=False, transform=transform_test)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=False)
 
-    bit_error_tolerance(model, 0.01, test_loader, device)
+    probs = [1e-2, 1e-4, 1e-6, 1e-8]
+    bit_error_tolerance(model, probs, test_loader, device)
