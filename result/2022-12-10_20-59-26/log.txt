@@ -1,0 +1,5 @@
+2022-12-10 20:59:26 - INFO - saving to ./result\2022-12-10_20-59-26
+2022-12-10 20:59:26 - DEBUG - run arguments: Namespace(results_dir='./result', save='2022-12-10_20-59-26', dataset='cifar10', data_path='../../Datasets/', model='vgg_cifar10_binary', input_size=None, model_config='', gpus='0', damage_train_rate=[0.01, 0.0001, 1e-06, 1e-08], workers=8, epochs=100, start_epoch=0, batch_size=256, optimizer='SGD', lr=0.005, momentum=0.9, weight_decay=0, print_freq=10, resume='', evaluate=None)
+2022-12-10 20:59:26 - INFO - creating model vgg_cifar10_binary
+2022-12-10 20:59:26 - INFO - created model with configuration: {'input_size': None, 'dataset': 'cifar10'}
+2022-12-10 20:59:27 - INFO - training regime: {0: {'optimizer': 'Adam', 'betas': (0.9, 0.999), 'lr': 0.005}, 40: {'lr': 0.001}, 80: {'lr': 0.0005}, 100: {'lr': 0.0001}, 120: {'lr': 5e-05}, 140: {'lr': 1e-05}}

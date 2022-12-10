@@ -21,7 +21,7 @@ model_names = sorted(name for name in models.__dict__
 
 parser = argparse.ArgumentParser(description='PyTorch ConvNet Training')
 
-parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./results',
+parser.add_argument('--results_dir', metavar='RESULTS_DIR', default='./result',
                     help='results dir')
 parser.add_argument('--save', metavar='SAVE', default='',
                     help='saved folder')
@@ -40,6 +40,8 @@ parser.add_argument('--model_config', default='',
                     help='additional architecture configuration')
 parser.add_argument('--gpus', default='0',
                     help='gpus used for training - e.g 0,1,3')
+parser.add_argument('--damage_train_rate', type=float, default=[1e-2, 1e-4, 1e-6, 1e-8], nargs='*',
+                    help='random of bit error rate to train BNN')
 parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
                     help='number of data loading workers (default: 8)')
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
@@ -62,7 +64,6 @@ parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 parser.add_argument('-e', '--evaluate', type=str, metavar='FILE',
                     help='evaluate model FILE on validation set')
-
 
 def main():
     global args, best_prec1
@@ -165,46 +166,52 @@ def main():
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=args.epochs-args.start_epoch, T_mult=1, eta_min=1e-5)
     logging.info('training regime: %s', regime)
 
+    def save_result(damage_train_rate):
+        for epoch in range(args.start_epoch, args.epochs):
+            # optimizer = adjust_optimizer(optimizer, epoch, regime)
+            scheduler.step(epoch)
 
-    for epoch in range(args.start_epoch, args.epochs):
-        # optimizer = adjust_optimizer(optimizer, epoch, regime)
-        scheduler.step(epoch)
+            # train for one epoch
+            train_loss, train_prec1, train_prec5 = train(
+                train_loader, model, criterion, epoch, optimizer, damage_train_rate)
 
-        # train for one epoch
-        train_loss, train_prec1, train_prec5 = train(
-            train_loader, model, criterion, epoch, optimizer)
+            # evaluate on validation set
+            val_loss, val_prec1, val_prec5 = validate(
+                val_loader, model, criterion, epoch)
 
-        # evaluate on validation set
-        val_loss, val_prec1, val_prec5 = validate(
-            val_loader, model, criterion, epoch)
+            # remember best prec@1 and save checkpoint
+            is_best = val_prec1 > best_prec1
+            best_prec1 = max(val_prec1, best_prec1)
 
-        # remember best prec@1 and save checkpoint
-        is_best = val_prec1 > best_prec1
-        best_prec1 = max(val_prec1, best_prec1)
+            save_checkpoint({
+                'epoch': epoch + 1,
+                'model': args.model,
+                'config': args.model_config,
+                'state_dict': model.state_dict(),
+                'best_prec1': best_prec1,
+                'regime': regime
+            }, is_best, path=save_path)
+            logging.info('Epoch: {0}, '
+                        'Train Loss {train_loss:.4f}, '
+                        'Train Acc@1 {train_prec1:.3f}, '
+                        'Train Acc@5 {train_prec5:.3f}, '
+                        'Valid Loss {val_loss:.4f}, '
+                        'Valid Acc@1 {val_prec1:.3f}, '
+                        'Valid Acc@5 {val_prec5:.3f}'
+                        .format(epoch + 1, train_loss=train_loss, val_loss=val_loss,
+                                train_prec1=train_prec1, val_prec1=val_prec1,
+                                train_prec5=train_prec5, val_prec5=val_prec5))
 
-        save_checkpoint({
-            'epoch': epoch + 1,
-            'model': args.model,
-            'config': args.model_config,
-            'state_dict': model.state_dict(),
-            'best_prec1': best_prec1,
-            'regime': regime
-        }, is_best, path=save_path)
-        logging.info('Epoch: {0}, '
-                     'Train Loss {train_loss:.4f}, '
-                     'Train Acc@1 {train_prec1:.3f}, '
-                     'Train Acc@5 {train_prec5:.3f}, '
-                     'Valid Loss {val_loss:.4f}, '
-                     'Valid Acc@1 {val_prec1:.3f}, '
-                     'Valid Acc@5 {val_prec5:.3f}'
-                     .format(epoch + 1, train_loss=train_loss, val_loss=val_loss,
-                             train_prec1=train_prec1, val_prec1=val_prec1,
-                             train_prec5=train_prec5, val_prec5=val_prec5))
+            results.add(epoch=epoch + 1, train_loss=train_loss, val_loss=val_loss,
+                        train_acc1=train_prec1, val_acc1=val_prec1,
+                        train_acc5=train_prec5, val_acc5=val_prec5)
+            results.save()
 
-        results.add(epoch=epoch + 1, train_loss=train_loss, val_loss=val_loss,
-                    train_acc1=train_prec1, val_acc1=val_prec1,
-                    train_acc5=train_prec5, val_acc5=val_prec5)
-        results.save()
+    if isinstance(args.damage_train_rate, list):
+        for damage_train_rate in args.damage_train_rate:
+            save_result(damage_train_rate)
+    else:
+        save_result(None)  
 
 
 def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=None):
@@ -230,8 +237,14 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
             with torch.no_grad():
                 output = model(inputs)
         else:
+            if isinstance(training, float):
+                for p in list(model.parameters()):
+                    index = torch.rand_like(p) < training
+                    p.data[index] = -p.data[index]
+                    if hasattr(p,'org'):
+                        p.org[index] = -p.org[index]
+                        print('change parameter')
             output = model(inputs)
-
         loss = criterion(output, target)
         if type(output) is list:
             output = output[0]
@@ -241,7 +254,7 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
         losses.update(loss.item(), inputs.size(0))
         top1.update(prec1.item(), inputs.size(0))
         top5.update(prec5.item(), inputs.size(0))
-
+        
         if training:
             # compute gradient and do SGD step
             optimizer.zero_grad()
@@ -274,10 +287,14 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
     return losses.avg, top1.avg, top5.avg
 
 
-def train(data_loader, model, criterion, epoch, optimizer):
+def train(data_loader, model, criterion, epoch, optimizer, damage_train_rate = None):
     # switch to train mode
     model.train()
-    return forward(data_loader, model, criterion, epoch,
+    if damage_train_rate:
+        return forward(data_loader, model, criterion, epoch,
+                   training=damage_train_rate, optimizer=optimizer)
+    else:
+        return forward(data_loader, model, criterion, epoch,
                    training=True, optimizer=optimizer)
 
 

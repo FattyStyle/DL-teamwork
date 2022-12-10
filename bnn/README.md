@@ -9,11 +9,18 @@ Code is based on https://github.com/itayhubara/BinaryNet.pytorch
 
 # Quick Start
 
-## Train BNN
+## Train BNN without bit error
 
 ```bash
 cd bnn
-python main_binary.py --results_dir "results" --save "vgg_cifar10_binary" --model "vgg_cifar10_binary" --dataset "cifar10" --data_path "../../Datasets."
+python main_binary.py --results_dir "results" --save "vgg_cifar10_binary" --model "vgg_cifar10_binary" --dataset "cifar10" --data_path "../../Datasets." 
+```
+
+## Train BNN with bit error list
+
+```bash
+cd bnn
+python main_binary.py --results_dir "results" --save "vgg_cifar10_binary" --model "vgg_cifar10_binary" --dataset "cifar10" --data_path "../../Datasets." --damage_train_rate 1e-2 1e-4 1e-6 1e-8
 ```
 
 
@@ -75,6 +82,6 @@ clipped loss:{1.534}, clipped acc:{0.519}, loss rate:{2.985}, acc rate:{0.567}
 
 ## BNN Training
 
- - BatchNorm对BNN至关重要，特别是最后一层。
- - Weight Decay = 0至关重要。
- - BNN训练需要较大的学习率，否则梯度的更新对sign没有作用。
+- BatchNorm对BNN至关重要，特别是最后一层。
+- Weight Decay = 0至关重要。
+- BNN训练需要较大的学习率，否则梯度的更新对sign没有作用。
