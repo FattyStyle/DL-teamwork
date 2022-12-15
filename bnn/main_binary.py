@@ -40,7 +40,7 @@ parser.add_argument('--model_config', default='',
                     help='additional architecture configuration')
 parser.add_argument('--gpus', default='0',
                     help='gpus used for training - e.g 0,1,3')
-parser.add_argument('--damage_train_rate', type=float, default=[1e-2, 1e-4, 1e-6, 1e-8], nargs='*',
+parser.add_argument('--damage_train_rate', type=float, default=0, metavar='N',    # [0.3, 0.2, 0.15, 0.075]
                     help='random of bit error rate to train BNN')
 parser.add_argument('-j', '--workers', default=8, type=int, metavar='N',
                     help='number of data loading workers (default: 8)')
@@ -50,8 +50,6 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
 parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N', help='mini-batch size (default: 256)')
-parser.add_argument('--optimizer', default='SGD', type=str, metavar='OPT',
-                    help='optimizer function used')
 parser.add_argument('--lr', '--learning_rate', default=0.005, type=float,
                     metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
@@ -138,10 +136,7 @@ def main():
                               input_size=args.input_size, augment=False)
     }
     transform = getattr(model, 'input_transform', default_transform)
-    regime = getattr(model, 'regime', {0: {'optimizer': args.optimizer,
-                                           'lr': args.lr,
-                                           'momentum': args.momentum,
-                                           'weight_decay': args.weight_decay}})
+
     # define loss function (criterion) and optimizer
     criterion = nn.CrossEntropyLoss()
 
@@ -164,57 +159,50 @@ def main():
     # define optimizer and scheduler
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(optimizer, T_0=args.epochs-args.start_epoch, T_mult=1, eta_min=1e-5)
-    logging.info('training regime: %s', regime)
-
-    def save_result(damage_train_rate):
-        for epoch in range(args.start_epoch, args.epochs):
-            # optimizer = adjust_optimizer(optimizer, epoch, regime)
-            scheduler.step(epoch)
-
-            # train for one epoch
-            train_loss, train_prec1, train_prec5 = train(
-                train_loader, model, criterion, epoch, optimizer, damage_train_rate)
-
-            # evaluate on validation set
-            val_loss, val_prec1, val_prec5 = validate(
-                val_loader, model, criterion, epoch)
-
-            # remember best prec@1 and save checkpoint
-            is_best = val_prec1 > best_prec1
-            best_prec1 = max(val_prec1, best_prec1)
-
-            save_checkpoint({
-                'epoch': epoch + 1,
-                'model': args.model,
-                'config': args.model_config,
-                'state_dict': model.state_dict(),
-                'best_prec1': best_prec1,
-                'regime': regime
-            }, is_best, path=save_path)
-            logging.info('Epoch: {0}, '
-                        'Train Loss {train_loss:.4f}, '
-                        'Train Acc@1 {train_prec1:.3f}, '
-                        'Train Acc@5 {train_prec5:.3f}, '
-                        'Valid Loss {val_loss:.4f}, '
-                        'Valid Acc@1 {val_prec1:.3f}, '
-                        'Valid Acc@5 {val_prec5:.3f}'
-                        .format(epoch + 1, train_loss=train_loss, val_loss=val_loss,
-                                train_prec1=train_prec1, val_prec1=val_prec1,
-                                train_prec5=train_prec5, val_prec5=val_prec5))
-
-            results.add(epoch=epoch + 1, train_loss=train_loss, val_loss=val_loss,
-                        train_acc1=train_prec1, val_acc1=val_prec1,
-                        train_acc5=train_prec5, val_acc5=val_prec5)
-            results.save()
-
-    if isinstance(args.damage_train_rate, list):
-        for damage_train_rate in args.damage_train_rate:
-            save_result(damage_train_rate)
-    else:
-        save_result(None)  
 
 
-def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=None):
+    for epoch in range(args.start_epoch, args.epochs):
+        # optimizer = adjust_optimizer(optimizer, epoch, regime)
+        scheduler.step(epoch)
+
+        # train for one epoch
+        train_loss, train_prec1, train_prec5 = train(
+            train_loader, model, criterion, epoch, optimizer, args.damage_train_rate)
+
+        # evaluate on validation set
+        val_loss, val_prec1, val_prec5 = validate(
+            val_loader, model, criterion, epoch, args.damage_train_rate)
+
+        # remember best prec@1 and save checkpoint
+        is_best = val_prec1 > best_prec1
+        best_prec1 = max(val_prec1, best_prec1)
+
+        save_checkpoint({
+            'epoch': epoch + 1,
+            'model': args.model,
+            'config': args.model_config,
+            'state_dict': model.state_dict(),
+            'best_prec1': best_prec1
+        }, is_best, path=save_path)
+        logging.info('Epoch: {0}, '
+                    'Train Loss {train_loss:.4f}, '
+                    'Train Acc@1 {train_prec1:.3f}, '
+                    'Train Acc@5 {train_prec5:.3f}, '
+                    'Valid Loss {val_loss:.4f}, '
+                    'Valid Acc@1 {val_prec1:.3f}, '
+                    'Valid Acc@5 {val_prec5:.3f}'
+                    .format(epoch + 1, train_loss=train_loss, val_loss=val_loss,
+                            train_prec1=train_prec1, val_prec1=val_prec1,
+                            train_prec5=train_prec5, val_prec5=val_prec5))
+
+        results.add(epoch=epoch + 1, train_loss=train_loss, val_loss=val_loss,
+                    train_acc1=train_prec1, val_acc1=val_prec1,
+                    train_acc5=train_prec5, val_acc5=val_prec5)
+        results.save()
+
+
+
+def forward(data_loader, model, criterion, epoch=0, training=True, damage_train_rate=0, optimizer=None):
     if args.gpus and len(args.gpus) > 1:
         model = torch.nn.DataParallel(model, args.gpus)
     batch_time = AverageMeter()
@@ -237,13 +225,13 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
             with torch.no_grad():
                 output = model(inputs)
         else:
-            if isinstance(training, float):
-                for p in list(model.parameters()):
-                    index = torch.rand_like(p) < training
-                    p.data[index] = -p.data[index]
-                    if hasattr(p,'org'):
-                        p.org[index] = -p.org[index]
-                        print('change parameter')
+            with torch.no_grad():
+                if damage_train_rate != 0:
+                    for p in list(model.parameters()):
+                        index = torch.rand_like(p) < damage_train_rate
+                        p.data[index] = -p.data[index]
+                        if hasattr(p,'org'):
+                            p.org[index] = -p.org[index]
             output = model(inputs)
         loss = criterion(output, target)
         if type(output) is list:
@@ -287,22 +275,18 @@ def forward(data_loader, model, criterion, epoch=0, training=True, optimizer=Non
     return losses.avg, top1.avg, top5.avg
 
 
-def train(data_loader, model, criterion, epoch, optimizer, damage_train_rate = None):
+def train(data_loader, model, criterion, epoch, optimizer, damage_train_rate):
     # switch to train mode
     model.train()
-    if damage_train_rate:
-        return forward(data_loader, model, criterion, epoch,
-                   training=damage_train_rate, optimizer=optimizer)
-    else:
-        return forward(data_loader, model, criterion, epoch,
-                   training=True, optimizer=optimizer)
+    return forward(data_loader, model, criterion, epoch,
+                training=True, damage_train_rate=damage_train_rate, optimizer=optimizer)
 
 
-def validate(data_loader, model, criterion, epoch):
+def validate(data_loader, model, criterion, epoch, damage_train_rate):
     # switch to evaluate mode
     model.eval()
     return forward(data_loader, model, criterion, epoch,
-                   training=False, optimizer=None)
+                   training=False, damage_train_rate=damage_train_rate, optimizer=None)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,38 @@
+2022-12-15 21:02:09 - INFO - saving to results\vgg_cifar10_binary_double_dtr=1e-4
+2022-12-15 21:02:09 - DEBUG - run arguments: Namespace(results_dir='results', save='vgg_cifar10_binary_double_dtr=1e-4', dataset='cifar10', data_path='../../Datasets', model='vgg_cifar10_binary', input_size=None, model_config='', gpus='0', damage_train_rate=0.0001, workers=8, epochs=100, start_epoch=0, batch_size=256, lr=0.005, momentum=0.9, weight_decay=0, print_freq=10, resume='', evaluate=None)
+2022-12-15 21:02:09 - INFO - creating model vgg_cifar10_binary
+2022-12-15 21:02:09 - INFO - created model with configuration: {'input_size': None, 'dataset': 'cifar10'}
+2022-12-15 21:04:03 - INFO - Epoch: 1, Train Loss 1.8189, Train Acc@1 34.678, Train Acc@5 84.498, Valid Loss 1.5345, Valid Acc@1 46.560, Valid Acc@5 91.840
+2022-12-15 21:05:54 - INFO - Epoch: 2, Train Loss 1.4513, Train Acc@1 50.458, Train Acc@5 92.312, Valid Loss 1.3239, Valid Acc@1 55.470, Valid Acc@5 94.490
+2022-12-15 21:07:46 - INFO - Epoch: 3, Train Loss 1.2369, Train Acc@1 59.830, Train Acc@5 94.888, Valid Loss 1.1468, Valid Acc@1 63.560, Valid Acc@5 96.020
+2022-12-15 21:09:37 - INFO - Epoch: 4, Train Loss 1.1188, Train Acc@1 64.828, Train Acc@5 95.894, Valid Loss 1.0682, Valid Acc@1 66.840, Valid Acc@5 96.470
+2022-12-15 21:11:29 - INFO - Epoch: 5, Train Loss 1.0331, Train Acc@1 68.680, Train Acc@5 96.670, Valid Loss 1.0114, Valid Acc@1 68.990, Valid Acc@5 97.040
+2022-12-15 21:13:20 - INFO - Epoch: 6, Train Loss 0.9479, Train Acc@1 72.182, Train Acc@5 97.302, Valid Loss 0.9754, Valid Acc@1 70.580, Valid Acc@5 97.170
+2022-12-15 21:15:12 - INFO - Epoch: 7, Train Loss 0.9019, Train Acc@1 74.126, Train Acc@5 97.606, Valid Loss 0.9610, Valid Acc@1 71.680, Valid Acc@5 96.990
+2022-12-15 21:17:03 - INFO - Epoch: 8, Train Loss 0.8531, Train Acc@1 76.288, Train Acc@5 97.922, Valid Loss 0.8582, Valid Acc@1 75.890, Valid Acc@5 97.930
+2022-12-15 21:18:54 - INFO - Epoch: 9, Train Loss 0.8166, Train Acc@1 77.718, Train Acc@5 98.184, Valid Loss 0.8638, Valid Acc@1 76.010, Valid Acc@5 97.810
+2022-12-15 21:20:46 - INFO - Epoch: 10, Train Loss 0.7810, Train Acc@1 79.384, Train Acc@5 98.440, Valid Loss 0.8560, Valid Acc@1 76.310, Valid Acc@5 97.550
+2022-12-15 21:22:37 - INFO - Epoch: 11, Train Loss 0.7554, Train Acc@1 80.436, Train Acc@5 98.556, Valid Loss 0.8984, Valid Acc@1 74.150, Valid Acc@5 97.290
+2022-12-15 21:24:29 - INFO - Epoch: 12, Train Loss 0.7319, Train Acc@1 81.304, Train Acc@5 98.618, Valid Loss 0.9300, Valid Acc@1 73.130, Valid Acc@5 97.530
+2022-12-15 21:26:20 - INFO - Epoch: 13, Train Loss 0.7112, Train Acc@1 82.406, Train Acc@5 98.684, Valid Loss 0.7780, Valid Acc@1 79.170, Valid Acc@5 98.350
+2022-12-15 21:28:12 - INFO - Epoch: 14, Train Loss 0.6984, Train Acc@1 82.858, Train Acc@5 98.746, Valid Loss 0.8133, Valid Acc@1 78.030, Valid Acc@5 97.490
+2022-12-15 21:30:03 - INFO - Epoch: 15, Train Loss 0.6825, Train Acc@1 83.496, Train Acc@5 98.852, Valid Loss 0.9867, Valid Acc@1 71.500, Valid Acc@5 96.740
+2022-12-15 21:31:54 - INFO - Epoch: 16, Train Loss 0.6682, Train Acc@1 84.168, Train Acc@5 98.928, Valid Loss 0.9204, Valid Acc@1 74.430, Valid Acc@5 96.930
+2022-12-15 21:33:45 - INFO - Epoch: 17, Train Loss 0.6577, Train Acc@1 84.734, Train Acc@5 99.026, Valid Loss 0.8663, Valid Acc@1 76.270, Valid Acc@5 97.330
+2022-12-15 21:35:37 - INFO - Epoch: 18, Train Loss 0.6488, Train Acc@1 85.046, Train Acc@5 98.966, Valid Loss 0.7782, Valid Acc@1 79.420, Valid Acc@5 98.230
+2022-12-15 21:37:29 - INFO - Epoch: 19, Train Loss 0.6370, Train Acc@1 85.454, Train Acc@5 98.994, Valid Loss 1.0852, Valid Acc@1 67.470, Valid Acc@5 96.180
+2022-12-15 21:39:20 - INFO - Epoch: 20, Train Loss 0.6343, Train Acc@1 85.554, Train Acc@5 99.022, Valid Loss 0.8751, Valid Acc@1 76.060, Valid Acc@5 97.090
+2022-12-15 21:41:12 - INFO - Epoch: 21, Train Loss 0.6331, Train Acc@1 85.630, Train Acc@5 98.968, Valid Loss 0.8765, Valid Acc@1 75.750, Valid Acc@5 97.620
+2022-12-15 21:43:03 - INFO - Epoch: 22, Train Loss 0.6325, Train Acc@1 85.636, Train Acc@5 99.056, Valid Loss 0.7914, Valid Acc@1 79.180, Valid Acc@5 97.650
+2022-12-15 21:44:55 - INFO - Epoch: 23, Train Loss 0.6227, Train Acc@1 86.104, Train Acc@5 99.074, Valid Loss 0.7677, Valid Acc@1 80.540, Valid Acc@5 98.190
+2022-12-15 21:46:46 - INFO - Epoch: 24, Train Loss 0.6256, Train Acc@1 86.044, Train Acc@5 99.036, Valid Loss 0.8861, Valid Acc@1 75.860, Valid Acc@5 96.570
+2022-12-15 21:48:38 - INFO - Epoch: 25, Train Loss 0.6243, Train Acc@1 86.030, Train Acc@5 98.996, Valid Loss 0.7854, Valid Acc@1 79.460, Valid Acc@5 97.760
+2022-12-15 21:50:30 - INFO - Epoch: 26, Train Loss 0.6244, Train Acc@1 86.198, Train Acc@5 99.048, Valid Loss 0.8646, Valid Acc@1 76.160, Valid Acc@5 97.680
+2022-12-15 21:52:21 - INFO - Epoch: 27, Train Loss 0.6299, Train Acc@1 85.932, Train Acc@5 99.024, Valid Loss 0.7864, Valid Acc@1 79.250, Valid Acc@5 97.920
+2022-12-15 21:54:12 - INFO - Epoch: 28, Train Loss 0.6293, Train Acc@1 85.924, Train Acc@5 99.060, Valid Loss 0.9401, Valid Acc@1 74.130, Valid Acc@5 95.120
+2022-12-15 21:56:04 - INFO - Epoch: 29, Train Loss 0.6279, Train Acc@1 85.954, Train Acc@5 98.986, Valid Loss 0.7812, Valid Acc@1 79.870, Valid Acc@5 98.250
+2022-12-15 21:57:55 - INFO - Epoch: 30, Train Loss 0.6309, Train Acc@1 85.798, Train Acc@5 99.058, Valid Loss 0.8584, Valid Acc@1 76.720, Valid Acc@5 97.660
+2022-12-15 21:59:46 - INFO - Epoch: 31, Train Loss 0.6370, Train Acc@1 85.526, Train Acc@5 99.014, Valid Loss 0.9089, Valid Acc@1 74.520, Valid Acc@5 96.640
+2022-12-15 22:01:41 - INFO - Epoch: 32, Train Loss 0.6395, Train Acc@1 85.416, Train Acc@5 99.030, Valid Loss 1.0943, Valid Acc@1 67.710, Valid Acc@5 95.070
+2022-12-15 22:03:34 - INFO - Epoch: 33, Train Loss 0.6331, Train Acc@1 85.904, Train Acc@5 98.988, Valid Loss 0.8618, Valid Acc@1 76.880, Valid Acc@5 97.360
+2022-12-15 22:05:28 - INFO - Epoch: 34, Train Loss 0.6420, Train Acc@1 85.352, Train Acc@5 98.996, Valid Loss 0.8025, Valid Acc@1 78.720, Valid Acc@5 97.900
